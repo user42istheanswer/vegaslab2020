@@ -2,6 +2,10 @@ name: .NET Core
 
 on: [push]
 
+env:
+  AZURE_WEBAPP_NAME: ghvsl2020jlf1980
+  AZURE_GROUP_NAME: ghvsl2020l
+
 jobs:
   build:
 
@@ -17,3 +21,14 @@ jobs:
       run: dotnet build ./src/ghcorewebapp/ghcorewebapp.csproj --configuration Release
     - name: Publish with dotnet
       run: dotnet publish ./src/ghcorewebapp/ghcorewebapp.csproj --configuration Release --output ./output
+
+
+    # Create/Update Azure App Service Plan and App Service
+    - name: Deploy
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDS }}
+    
+    - run: |
+        az group create -n ${{ env.AZURE_GROUP_NAME }} -l westus
+        az group deployment create -n ghaction -g ${{ env.AZURE_GROUP_NAME }} --template-file ./src/infra/azureres.json --parameters webAppName=${{ env.AZURE_WEBAPP_NAME }}
